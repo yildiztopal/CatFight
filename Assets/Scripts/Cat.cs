@@ -176,9 +176,15 @@ public class Cat : MonoBehaviour
         GameObject newFurball = Instantiate(farAttack, transform.position + new Vector3(0,0,0.5f), Quaternion.identity);
         newFurball.SetActive(true);
         if (catOne)
+        {
             newFurball.GetComponent<Furball>().enemyTag = "CatTwo";
+        } 
         else if (catTwo)
+        {
             newFurball.GetComponent<Furball>().enemyTag = "CatOne";
+            newFurball.transform.localScale = new Vector3(-newFurball.transform.localScale.x,
+                newFurball.transform.localScale.y, newFurball.transform.localScale.z);
+        }
     }
 
     void OnCollisionStay2D(Collision2D collision)

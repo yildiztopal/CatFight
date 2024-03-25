@@ -37,15 +37,13 @@ public class Furball : MonoBehaviour
                 {
                     collision.gameObject.GetComponent<Cat>().health -= 15;
                     collision.GetComponent<Animator>().SetTrigger("Hurt");
-                    gameObject.SetActive(false);
                 }
                 if (collision.gameObject.GetComponent<Cat>().health <= 0)
                 {
                     collision.GetComponent<Animator>().SetBool("Death", true);
-                    gameObject.SetActive(false);
                 }
             }
-
+            Destroy(gameObject);
         }
         if (collision.CompareTag("Wall"))
         {

@@ -32,8 +32,16 @@ public class GameManager : MonoBehaviour
         }
 
         if (catScriptTwo.catOneDead)
+        {
             catScriptOne.enabled = false;
+            catScriptTwo.catOneDead = false;
+        }
+     
         if (catScriptOne.catTwoDead)
+        {
             catScriptTwo.enabled = false;
+            catScriptOne.catTwoDead = false;
+        }
+            
     }
 }
