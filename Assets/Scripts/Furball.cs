@@ -29,7 +29,7 @@ public class Furball : MonoBehaviour
         {
             if (collision.gameObject.GetComponent<Cat>().health > 0)
             {
-                if (collision.gameObject.GetComponent<Cat>().onBlock)
+                if (collision.gameObject.GetComponent<Cat>().onDefend)
                 {
                     collision.gameObject.GetComponent<Cat>().health -= 2;
                 }
@@ -37,18 +37,19 @@ public class Furball : MonoBehaviour
                 {
                     collision.gameObject.GetComponent<Cat>().health -= 15;
                     collision.GetComponent<Animator>().SetTrigger("Hurt");
+                    gameObject.SetActive(false);
                 }
                 if (collision.gameObject.GetComponent<Cat>().health <= 0)
                 {
                     collision.GetComponent<Animator>().SetBool("Death", true);
-                    this.gameObject.SetActive(false);
+                    gameObject.SetActive(false);
                 }
             }
 
         }
         if (collision.CompareTag("Wall"))
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
     }
 }

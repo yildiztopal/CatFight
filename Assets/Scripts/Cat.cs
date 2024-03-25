@@ -4,27 +4,36 @@ using UnityEngine.UI;
 public class Cat : MonoBehaviour
 {
     public Animator animator;
-    public Rigidbody2D rb;
     public GameObject farAttack;
     public Image healthBar;
-
-    public int runSpeed = 10, jumpForce = 100;
-    public bool playerOne, playerTwo, onBlock, onGround, onLeft, onRight;
+    
+    public bool catOne, catTwo, onDefend, onGround, onLeft, onRight, catOneDead, catTwoDead;
     public int health = 100;
+
+    
+    Rigidbody2D rb;
+    NearAttack nearAttack1, nearAttack2;
+
+    int runSpeed = 10, jumpForce = 350;
 
     void Start()
     {
         if (gameObject.CompareTag("CatOne"))
         {
-            transform.GetChild(0).GetComponent<NearAttack>().playerOne = true;
-            playerOne = true;
-            transform.GetChild(0).GetComponent<NearAttack>().enemy = GameObject.FindGameObjectWithTag("CatTwo");
+            catOne = true;
+            rb = GetComponent<Rigidbody2D>();
+            nearAttack1 = transform.GetChild(0).GetComponent<NearAttack>();
+            nearAttack1.playerOne = true;
+            nearAttack1.enemy = GameObject.FindGameObjectWithTag("CatTwo");
+
         }
         else if (gameObject.CompareTag("CatTwo"))
         {
-            playerTwo = true;
-            transform.GetChild(0).GetComponent<NearAttack>().playerTwo = true;
-            transform.GetChild(0).GetComponent<NearAttack>().enemy = GameObject.FindGameObjectWithTag("CatOne");
+            catTwo = true;
+            rb = GetComponent<Rigidbody2D>();
+            nearAttack2 = transform.GetChild(0).GetComponent<NearAttack>();
+            nearAttack2.playerTwo = true;
+            nearAttack2.enemy = GameObject.FindGameObjectWithTag("CatOne");
         }
     }
 
@@ -32,79 +41,61 @@ public class Cat : MonoBehaviour
     {
         animator.SetBool("Walk", false);
         animator.SetBool("Idle", false);
-        //animator.SetBool("Crouch", false);
         animator.SetBool("Defend", false);
         animator.SetBool(animName, true);
     }
 
     void Update()
     {
-        healthBar.fillAmount = (float)health / 100.0f;
+        healthBar.fillAmount = health / 100.0f;
+
         #region PlayerOneController
-        if (playerOne)
+        if (catOne)
         {
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
             {
                 AnimationReset("Walk");
-                NormalCollider();
-                onBlock = false;
+                onDefend = false;
             }
             if (Input.GetKeyDown(KeyCode.W) && onGround == true)
             {
                 animator.SetTrigger("Jump");
                 rb.AddForce(Vector2.up * jumpForce);
-                NormalCollider();
             }
-            //if (Input.GetKeyDown(KeyCode.Q))
-            //{
-            //    animator.SetTrigger("DashAttack");
-            //    NormalCollider();
-            //    onBlock = false;
-            //    if (transform.GetChild(0).GetComponent<NearAttack>().enemyNear)
-            //    {
-            //        transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Cat>().health -= 20;
-            //        if (transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Cat>().health <= 0)
-            //        {
-            //            transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetBool("Death", true);
-            //        }
-            //        else
-            //        {
-            //            transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetTrigger("Hurt");
-            //        }
-            //    }
-            //}
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                animator.SetTrigger("nearAttack");
+                onDefend = false;
+
+                if (nearAttack1.enemyNear)
+                {
+                    nearAttack1.enemy.GetComponent<Cat>().health -= 20;
+                    if (nearAttack1.enemy.GetComponent<Cat>().health <= 0)
+                    {
+                        nearAttack1.enemy.GetComponent<Animator>().SetBool("Death", true);
+                        catTwoDead = true;
+                    }
+                    else
+                    {
+                        transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetTrigger("Hurt");
+                    }
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.E))
             {
                 animator.SetTrigger("Attack");
-                onBlock = false;
-                Invoke(nameof(Attack), 0.5f);
+                onDefend = false;
+                Invoke(nameof(Attack), 0.1f);
             }
-            //if (Input.GetKeyDown(KeyCode.S))
-            //{
-            //    animator.SetBool("Walk", false);
-            //    animator.SetBool("Idle", false);
-            //    animator.SetBool("Crouch", true);
-            //    animator.SetBool("Defend", false);
-            //    CrouchCollider();
-            //    onBlock = false;
-            //}
             if (Input.anyKey == false)
             {
-                animator.SetBool("Walk", false);
-                animator.SetBool("Idle", true);
-                //animator.SetBool("Crouch", false);
-                animator.SetBool("Defend", false);
-                NormalCollider();
-                onBlock = false;
+                AnimationReset("Idle");
+                onDefend = false;
             }
-            if (Input.GetKeyDown(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.S))
             {
-                animator.SetBool("Walk", false);
-                animator.SetBool("Idle", false);
-                animator.SetBool("Crouch", false);
-                animator.SetBool("Defend", true);
-                NormalCollider();
-                onBlock = true;
+                AnimationReset("Defend");
+                onDefend = true;
             }
             if (Input.GetKey(KeyCode.A))
             {
@@ -117,74 +108,52 @@ public class Cat : MonoBehaviour
         }
         #endregion
         #region PlayerTwoController
-        if (playerTwo)
+        if (catTwo)
         {
             if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))
             {
-                animator.SetBool("Walk", true);
-                animator.SetBool("Idle", false);
-                //animator.SetBool("Crouch", false);
-                animator.SetBool("Defend", false);
-                NormalCollider();
-                onBlock = false;
+                AnimationReset("Walk");
+                onDefend = false;
             }
             if (Input.GetKeyDown(KeyCode.UpArrow) && onGround)
             {
                 animator.SetTrigger("Jump");
                 rb.AddForce(Vector2.up * jumpForce);
-                NormalCollider();
-                onBlock = false;
+                onDefend = false;
             }
-            //if (Input.GetKeyDown(KeyCode.DownArrow))
-            //{
-            //    animator.SetBool("Walk", false);
-            //    animator.SetBool("Idle", false);
-            //    animator.SetBool("Crouch", true);
-            //    animator.SetBool("Defend", false);
-            //    CrouchCollider();
-            //    onBlock = false;
-            //}
             if (Input.GetKeyDown(KeyCode.Return))
             {
                 animator.SetTrigger("Attack");
-                NormalCollider();
-                onBlock = false;
+                onDefend = false;
             }
-            //if (Input.GetKeyDown(KeyCode.RightShift))
-            //{
-            //    animator.SetTrigger("DashAttack");
-            //    NormalCollider();
-            //    onBlock = false;
-            //    if (transform.GetChild(0).GetComponent<NearAttack>().enemyNear)
-            //    {
-            //        transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Cat>().health -= 20;
-            //        if (transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Cat>().health <= 0)
-            //        {
-            //            transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetBool("Death", true);
-            //        }
-            //        else
-            //        {
-            //            transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetTrigger("Hurt");
-            //        }
-            //    }
-            //}
-            if (Input.GetKeyDown(KeyCode.RightControl))
+            if (Input.GetKeyDown(KeyCode.RightShift))
             {
-                animator.SetBool("Walk", false);
-                animator.SetBool("Idle", false);
-                animator.SetBool("Crouch", false);
-                animator.SetBool("Defend", true);
-                NormalCollider();
-                onBlock = true;
+                animator.SetTrigger("nearAttack");
+                onDefend = false;
+
+                if (nearAttack2.enemyNear)
+                {
+                    nearAttack2.enemy.GetComponent<Cat>().health -= 20;
+                    if (nearAttack2.enemy.GetComponent<Cat>().health <= 0)
+                    {
+                        nearAttack2.enemy.GetComponent<Animator>().SetBool("Death", true);
+                        catOneDead = true;
+                    }
+                    else
+                    {
+                        transform.GetChild(0).GetComponent<NearAttack>().enemy.GetComponent<Animator>().SetTrigger("Hurt");
+                    }
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                AnimationReset("Defend");
+                onDefend = true;
             }
             if (Input.anyKey == false)
             {
-                animator.SetBool("Walk", false);
-                animator.SetBool("Idle", true);
-                //animator.SetBool("Crouch", false);
-                animator.SetBool("Defend", false);
-                NormalCollider();
-                onBlock = false;
+                AnimationReset("Idle");
+                onDefend = false;
             }
             if (Input.GetKey(KeyCode.LeftArrow))
             {
@@ -196,7 +165,7 @@ public class Cat : MonoBehaviour
             }
             if (Input.GetKeyDown(KeyCode.Return))
             {
-                Invoke(nameof(Attack), 0.5f);
+                Invoke(nameof(Attack), 0.1f);
             }
         }
         #endregion
@@ -204,33 +173,21 @@ public class Cat : MonoBehaviour
 
     void Attack()
     {
-        GameObject newFurball = Instantiate(farAttack, transform.position, Quaternion.identity);
+        GameObject newFurball = Instantiate(farAttack, transform.position + new Vector3(0,0,0.5f), Quaternion.identity);
         newFurball.SetActive(true);
-        if (playerOne)
+        if (catOne)
             newFurball.GetComponent<Furball>().enemyTag = "CatTwo";
-        else if (playerTwo)
+        else if (catTwo)
             newFurball.GetComponent<Furball>().enemyTag = "CatOne";
     }
 
-    void CrouchCollider()
-    {
-        //GetComponent<BoxCollider2D>().size = new Vector2(0.237f, 0.163f);
-        //GetComponent<BoxCollider2D>().offset = new Vector2(-0.07f, -0.141f);
-    }
-
-    void NormalCollider()
-    {
-        //GetComponent<BoxCollider2D>().size = new Vector2(0.237f, 0.36f);
-        //GetComponent<BoxCollider2D>().offset = new Vector2(-0.07f, -0.04f);
-    }
-
-    private void OnCollisionStay2D(Collision2D collision)
+    void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
             onGround = true;
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    void OnCollisionExit2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
             onGround = false;
